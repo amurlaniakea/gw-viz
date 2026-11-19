@@ -1,8 +1,18 @@
 # GW Analysis Toolkit
 
-Análisis reproducible de datos abiertos de ondas gravitacionales (LIGO/Virgo/KAGRA) descargados de [GWOSC](https://www.gwosc.org/).
+[![ci](https://github.com/amurlaniakea/gw-viz/actions/workflows/ci.yml/badge.svg)](https://github.com/amurlaniakea/gw-viz/actions/workflows/ci.yml)
+![licencia](https://img.shields.io/badge/licencia-AGPL--3.0--or--later-blue)
+
+Herramienta en Python, legible y reproducible, para analizar datos abiertos de ondas gravitacionales
+(LIGO/Virgo/KAGRA) del [GWOSC](https://gwosc.org/). Pensada para **consulta rápida** (línea de comandos y salida JSON)
+y para **docencia universitaria** (código corto, tests, notebook y guía de prácticas).
 
 > *«Tecnosfera al servicio de la biosfera.»*
+
+*English summary:* a small, readable and tested Python toolkit that downloads open LIGO/Virgo strain data,
+whitens and band-passes it, measures excess-power significance against off-source data, and runs an
+educational matched filter (2PN TaylorF2 inspiral bank) validated by injection/recovery. Not a replacement for
+LALSuite/PyCBC; see *Limitaciones*.
 
 ## Instalación
 
@@ -15,36 +25,68 @@ pip install -e ".[dev]"
 ## Uso
 
 ```bash
-gw-analyze GW150914 --detector H1
+gw-analyze GW150914 --detector H1                      # análisis básico + figura
+gw-analyze GW150914 --detector H1 --matched-filter     # + matched filter educativo
+gw-analyze GW150914 --span 32 --json --no-plot         # salida máquina-legible
+gw-analyze --list-events                               # catálogo GWOSC (requiere red)
 ```
 
-Qué hace:
+Salida real con GW150914 (H1, `--span 64`):
 
-1. Descarga el HDF5 del evento (4096 Hz) y lo cachea en `data/raw/` (o en `$GW_DATA_DIR`).
-2. Blanquea y filtra en 35–350 Hz con una PSD de Welch estimada de los propios datos.
-3. Mide la ventana del evento frente a ventanas fuera de la fuente del mismo archivo.
-4. Escribe `output/GW150914_report.png` (señal filtrada, zoom blanqueado, ASD).
+```
+GW150914 (H1): 262144 samples @ 4096 Hz
+  excess-power significance : 18.1 sigma (NOT matched-filter SNR)
+  peak whitened amplitude   : 8.1 sigma
+  peak band-passed strain   : 2.43e-21
+  central frequency         : 57 Hz
+```
+
+La primera ejecución descarga el archivo a `data/raw/` (o a `$GW_DATA_DIR`); las siguientes usan la caché.
+Con `--span 32`, `64` y `128` la significancia sale 18.7σ, 18.1σ y 17.4σ: es estable frente a la ventana analizada.
 
 ## Qué mide (y qué no)
 
-Las métricas (`excess_power_sigma`, `peak_whitened_sigma`, `central_freq_hz`) son **significancia de exceso de potencia**
-respecto al ruido del propio archivo. **No es SNR de filtro adaptado**: los SNR publicados
-(p. ej. ~24 de red para GW150914) salen de matched filtering con bancos de plantillas y no coincidirán con estos números.
+| Magnitud | Qué es |
+|---|---|
+| `excess_power_sigma` | Energía blanqueada de la ventana del evento frente a ventanas sin señal del mismo archivo (z-score). **No es SNR de filtro adaptado.** |
+| `peak_whitened_sigma` | Pico de la señal blanqueada, en desviaciones típicas del ruido. |
+| `peak_amp_bandpassed` | Pico del strain filtrado 35–350 Hz en la ventana (sin filtros notch). |
+| `matched_filter.snr` | SNR de un filtro adaptado con plantillas de inspiral TaylorF2 (2PN) cortadas en el ISCO: **cota inferior**, no reproduce los SNR publicados (~24 de red en GW150914). |
+| `false_alarm_probability_lower_bound` | Cota empírica: (1 + nº de ventanas sin señal con SNR ≥ el medido) / (1 + nº de ventanas). |
+
+Detalles, fórmulas y validación en [`docs/METODOLOGIA.md`](docs/METODOLOGIA.md).
+
+## Para clase
+
+[`docs/AULA.md`](docs/AULA.md) propone cuatro prácticas (señal cruda vs. filtrada, ruido y PSD, robustez estadística,
+filtro adaptado y probabilidad de falsa alarma) y preguntas de discusión. El notebook
+[`notebooks/tutorial_gw150914.ipynb`](notebooks/tutorial_gw150914.ipynb) las recorre paso a paso.
 
 ## Estructura
 
-- `src/gw_analysis/io/`: descarga y lectura de HDF5 (tiempos GPS y frecuencia de muestreo leídos del propio archivo).
-- `src/gw_analysis/processing/`: blanqueado, filtrado y métricas (NumPy/SciPy).
-- `src/gw_analysis/viz/`: informe de 3 paneles.
-- `src/gw_analysis/cli.py`: comando `gw-analyze`.
-- `notebooks/`: tutorial paso a paso. `examples/`: script equivalente al CLI.
-- `tests/`: pruebas con datos sintéticos (`pytest`), sin red.
-
-## Desarrollo
+- `src/gw_analysis/io/`: descarga con caché atómica y lectura de HDF5 (GPS y frecuencia de muestreo se leen del archivo).
+- `src/gw_analysis/processing/`: blanqueado y métricas (`snr_calculator.py`), filtro adaptado (`matched_filter.py`).
+- `src/gw_analysis/viz/`: figuras. `src/gw_analysis/cli.py`: comando `gw-analyze`.
+- `tests/`: 19 pruebas con datos sintéticos (sin red), incluida inyección y recuperación de señales.
 
 ```bash
-pytest && ruff check .
+pytest -q && ruff check .
 ```
+
+## Limitaciones
+
+- Plantillas solo de inspiral (sin fusión ni ringdown): masas recuperadas **indicativas**, no estimación de parámetros.
+- Un solo detector por ejecución; sin coincidencia H1/L1, sin tratamiento de glitches ni filtros notch.
+- Validado con datos sintéticos y con GW150914 (H1). Otros eventos, en especial sistemas de estrellas de neutrones
+  de larga duración como GW170817, requieren otra banda y otro banco de plantillas.
+- Para análisis científicos usa [GWpy](https://gwpy.github.io/), [PyCBC](https://pycbc.org/) o LALSuite.
+
+## Cómo citar
+
+Consulta [`CITATION.cff`](CITATION.cff). Si usas datos de GWOSC, reconoce su origen:
+*«This research has made use of data obtained from the Gravitational Wave Open Science Center (gwosc.org)»*.
+
+Referencias: Abbott et al., *Phys. Rev. Lett.* 116, 061102 (2016) (GW150914); Abbott et al., *SoftwareX* 13, 100658 (2021) (datos abiertos O1/O2).
 
 ## Licencia
 
