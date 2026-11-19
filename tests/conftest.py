@@ -60,3 +60,13 @@ def inject_taylorf2(noise, m1, m2, rho_opt, t_c, f_low=20.0):
     sigma_unit = np.sqrt(4 * (1 / (n / FS)) * np.sum(np.abs(h[band]) ** 2 / colored_psd(f)[band]))
     amp = rho_opt / sigma_unit
     return noise + np.fft.irfft(amp * h * np.exp(-2j * np.pi * f * t_c) * FS, n=n)
+
+
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch):
+    """Tests must be hermetic: any real HTTP request fails immediately."""
+
+    def blocked(*_a, **_k):
+        raise RuntimeError("network access is blocked in tests")
+
+    monkeypatch.setattr("requests.sessions.Session.request", blocked)

@@ -128,6 +128,26 @@ def test_cli_json_and_errors(tmp_path, gwosc_file, monkeypatch, capsys):
                      "--json", "--no-plot", "--span", "24"])
     out = json.loads(capsys.readouterr().out)
     assert code == 0 and out["event"] == "GW150914" and out["excess_power_sigma"] > 8
+    # no cached file and no network -> clean error, exit code 1 (no real download attempted)
     assert cli.main(["GW150914", "--detector", "L1", "--data-dir", str(tmp_path / "none")]) == 1
+    assert "Error" in capsys.readouterr().err
     with pytest.raises(SystemExit):
         cli.main([])
+
+
+def test_list_events_falls_back_when_catalogue_is_down(monkeypatch, capsys):
+    from gw_analysis import cli
+
+    def down():
+        raise ConnectionError("catalogue down")
+
+    monkeypatch.setattr(cli, "list_events", down)
+    assert cli.main(["--list-events"]) == 0
+    cap = capsys.readouterr()
+    assert "GW150914" in cap.out and "Warning" in cap.err
+
+
+def test_retrying_session_retries_get():
+    s = downloader._retrying_session()
+    retry = s.get_adapter("https://gwosc.org").max_retries
+    assert retry.total == 4 and 503 in retry.status_forcelist

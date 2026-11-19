@@ -26,6 +26,7 @@ Ejecuta con `--matched-filter` y abre `output/GW150914_snr.png`.
 - ¿Qué masa chirp recupera? ¿Por qué el SNR es menor que el publicado (~24)? (pista: plantillas cortadas en el ISCO)
 - Interpreta la cota de falsa alarma: ¿qué significa «(1 + k)/(1 + N)»? ¿Cómo la mejorarías con más ventanas?
 - Voluntario: inyecta una señal con `tests/conftest.py::inject_taylorf2` en ruido sintético y comprueba que recuperas el SNR inyectado.
+*Referencia para el profesor* (GW150914, `--span 64`, versión 0.3.x): H1 ≈ 10.8 con fondo máximo ≈ 4.9; L1 ≈ 6.5 con fondo máximo ≈ 5.1. En L1 la señal queda cerca del fondo: buen punto de partida para discutir significancia y por qué se combinan los detectores.
 *Objetivo*: idea de filtro óptimo, fondo empírico y significancia estadística.
 
 ## Discusión final

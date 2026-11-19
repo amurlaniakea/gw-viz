@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: "Sordo Martínez"
     given-names: "Pedro"
-version: 0.3.0
+version: 0.3.1
 date-released: 2026-11-19
 license: AGPL-3.0-or-later
 repository-code: "https://github.com/amurlaniakea/gw-viz"

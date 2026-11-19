@@ -45,9 +45,21 @@ def data_dir() -> Path:
     return Path(os.getenv("GW_DATA_DIR", "./data/raw"))
 
 
+def _retrying_session() -> requests.Session:
+    """HTTP session that retries dropped connections and 429/5xx answers with backoff."""
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+
+    session = requests.Session()
+    retry = Retry(total=4, backoff_factor=1.0, status_forcelist=(429, 500, 502, 503, 504),
+                  allowed_methods=frozenset({"GET"}))
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+    return session
+
+
 def list_events() -> list[str]:
     """Event names in the GWOSC catalogue (needs network); version suffixes are dropped."""
-    names = datasets.find_datasets(type="event")
+    names = datasets.find_datasets(type="event", session=_retrying_session())
     return sorted({re.sub(r"-v\d+$", "", n) for n in names})
 
 

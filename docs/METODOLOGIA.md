@@ -48,6 +48,7 @@ plantillas más largas podría contaminar. La cota de falsa alarma es (1 + nº d
   (3 realizaciones cada uno), con la masa chirp correcta. Solo ruido: máximo del banco 3,3–4,3.
 - **Convención de signo**: un test comprueba que la frecuencia de la plantilla crece con el tiempo (un chirp) y no al revés.
 - **Estabilidad**: con GW150914 (H1) la significancia de exceso de potencia fue 18,7σ, 18,1σ y 17,4σ para ventanas de 32, 64 y 128 s.
+- **Datos reales (GW150914, `--span 64`)**: filtro adaptado con SNR 10,8 en H1 (fondo máximo 4,9) y 6,5 en L1 (fondo máximo 5,1); 138 ventanas fuera de la fuente en ambos casos. La suma en cuadratura (≈12,6) es ~la mitad del SNR de red publicado (~24), compatible con plantillas cortadas en el ISCO. Las masas del mejor ajuste (37 + 37 M☉) son indicativas, no una estimación de parámetros.
 - **Cargadores y CLI**: tests con archivos HDF5 sintéticos en ambos formatos, descarga atómica y caché.
 
 ## 6. Limitaciones

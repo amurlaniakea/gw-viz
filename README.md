@@ -41,6 +41,16 @@ GW150914 (H1): 262144 samples @ 4096 Hz
   central frequency         : 57 Hz
 ```
 
+Con `--matched-filter` (mismos datos, `--span 64`):
+
+| Detector | SNR filtro adaptado | Mayor SNR en el fondo | Mejor plantilla (indicativa) | Cota de falsa alarma |
+|---|---|---|---|---|
+| H1 | 10.8 | 4.9 | m₁ = m₂ = 37 M☉ (M_chirp ≈ 32.5 M☉) | ≤ 0.007 (138 ventanas) |
+| L1 | 6.5 | 5.1 | m₁ = m₂ = 37 M☉ (M_chirp ≈ 32.5 M☉) | ≤ 0.007 (138 ventanas) |
+
+La suma en cuadratura (√(10.8² + 6.5²) ≈ 12.6) es aproximadamente la mitad del SNR de red publicado (~24), como cabe esperar
+de plantillas solo de inspiral. En L1 la separación respecto al fondo (6.5 frente a 5.1) es modesta.
+
 La primera ejecución descarga el archivo a `data/raw/` (o a `$GW_DATA_DIR`); las siguientes usan la caché.
 Con `--span 32`, `64` y `128` la significancia sale 18.7σ, 18.1σ y 17.4σ: es estable frente a la ventana analizada.
 
@@ -67,7 +77,7 @@ filtro adaptado y probabilidad de falsa alarma) y preguntas de discusión. El no
 - `src/gw_analysis/io/`: descarga con caché atómica y lectura de HDF5 (GPS y frecuencia de muestreo se leen del archivo).
 - `src/gw_analysis/processing/`: blanqueado y métricas (`snr_calculator.py`), filtro adaptado (`matched_filter.py`).
 - `src/gw_analysis/viz/`: figuras. `src/gw_analysis/cli.py`: comando `gw-analyze`.
-- `tests/`: 19 pruebas con datos sintéticos (sin red), incluida inyección y recuperación de señales.
+- `tests/`: 21 pruebas herméticas con datos sintéticos (la red está bloqueada en los tests), incluida inyección y recuperación de señales.
 
 ```bash
 pytest -q && ruff check .

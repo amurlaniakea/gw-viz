@@ -12,6 +12,7 @@ matplotlib.use("Agg")
 
 from gw_analysis import __version__
 from gw_analysis.io.downloader import (
+    KNOWN_EVENTS_GPS,
     crop_strain,
     download_event_strain,
     event_gps,
@@ -46,10 +47,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if a.list_events:
         try:
-            print("\n".join(list_events()))
+            names = list_events()
         except Exception as e:  # noqa: BLE001 - network/catalogue errors
-            print(f"Error: {e}", file=sys.stderr)
-            return 1
+            print(f"Warning: GWOSC catalogue unavailable ({e}); showing only the events "
+                  "built into this tool.", file=sys.stderr)
+            names = sorted(KNOWN_EVENTS_GPS)
+        print("\n".join(names))
         return 0
     if not a.event_id:
         parser.error("event_id is required (or use --list-events)")
