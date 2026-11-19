@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -42,6 +43,12 @@ def crop_strain(s: Strain, center_gps: float, span_s: float) -> Strain:
 
 def data_dir() -> Path:
     return Path(os.getenv("GW_DATA_DIR", "./data/raw"))
+
+
+def list_events() -> list[str]:
+    """Event names in the GWOSC catalogue (needs network); version suffixes are dropped."""
+    names = datasets.find_datasets(type="event")
+    return sorted({re.sub(r"-v\d+$", "", n) for n in names})
 
 
 def event_gps(event_id: str) -> float:

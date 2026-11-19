@@ -42,3 +42,21 @@ def gwosc_file(tmp_path, signal):
         ds.attrs["Xspacing"] = 1 / FS
         f.create_dataset("meta/GPSstart", data=int(GPS0))
     return p
+
+
+def colored_psd(freqs):
+    """Analytic one-sided PSD of make_strain() noise."""
+    return (2.0 / FS) * 1e-42 / (1 + (30.0 / np.maximum(freqs, 1.0)) ** 4)
+
+
+def inject_taylorf2(noise, m1, m2, rho_opt, t_c, f_low=20.0):
+    """Add a TaylorF2 inspiral with known optimal SNR (given analytic PSD) ending at t_c seconds."""
+    from gw_analysis.processing.matched_filter import taylorf2
+
+    n = len(noise)
+    f = np.fft.rfftfreq(n, 1 / FS)
+    h = taylorf2(f, m1, m2, f_low)
+    band = np.flatnonzero(h)
+    sigma_unit = np.sqrt(4 * (1 / (n / FS)) * np.sum(np.abs(h[band]) ** 2 / colored_psd(f)[band]))
+    amp = rho_opt / sigma_unit
+    return noise + np.fft.irfft(amp * h * np.exp(-2j * np.pi * f * t_c) * FS, n=n)

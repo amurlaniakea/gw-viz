@@ -41,3 +41,22 @@ def plot_full_analysis(times, strain, metrics, event_id, output_dir="./output") 
     fig.savefig(path, dpi=200)
     plt.close(fig)
     return path
+
+
+def plot_snr_timeseries(result, event_id, output_dir="./output") -> Path:
+    """Matched-filter SNR around the event against the off-source background."""
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(result.times, result.rho, color="#38bdf8", lw=1.0, label="SNR(t), max over bank")
+    ax.axhline(result.background_max, color="red", ls=":", label="max SNR off-source")
+    ax.axvline(result.peak_time_offset_s, color="gray", ls="--", lw=0.8)
+    ax.set(title=f"{event_id}: matched-filter SNR (educational, inspiral-only bank)",
+           xlabel="Time from event (s)", ylabel="SNR")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    path = out / f"{event_id}_snr.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path

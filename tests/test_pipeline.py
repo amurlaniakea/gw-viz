@@ -111,3 +111,23 @@ def test_significance_is_stable_across_analysed_span(signal):
         for c in (crop_strain(s, EVENT, span) for span in (0, 24))
     ]
     assert max(vals) / min(vals) < 1.25
+
+
+def test_list_events_strips_versions(monkeypatch):
+    monkeypatch.setattr(downloader.datasets, "find_datasets", lambda **k: ["GW150914-v3", "GW150914-v1", "GW170817-v3"])
+    assert downloader.list_events() == ["GW150914", "GW170817"]
+
+
+def test_cli_json_and_errors(tmp_path, gwosc_file, monkeypatch, capsys):
+    import json
+
+    from gw_analysis import cli
+
+    monkeypatch.setattr(cli, "event_gps", lambda _e: EVENT)
+    code = cli.main(["GW150914", "--data-dir", str(gwosc_file.parent), "--output-dir", str(tmp_path),
+                     "--json", "--no-plot", "--span", "24"])
+    out = json.loads(capsys.readouterr().out)
+    assert code == 0 and out["event"] == "GW150914" and out["excess_power_sigma"] > 8
+    assert cli.main(["GW150914", "--detector", "L1", "--data-dir", str(tmp_path / "none")]) == 1
+    with pytest.raises(SystemExit):
+        cli.main([])
