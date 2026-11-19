@@ -10,6 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 from gw_analysis.io.downloader import (
+    crop_strain,
     download_event_strain,
     event_gps,
     load_hdf5_strain,
@@ -23,6 +24,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("event_id", help="Event name, e.g. GW150914")
     p.add_argument("--detector", default="H1", choices=["H1", "L1", "V1"])
     p.add_argument("--data-dir", type=Path, default=None, help="Cache dir (default ./data/raw)")
+    p.add_argument("--span", type=float, default=64.0,
+                   help="Seconds of data centred on the event to analyse (0 = whole file)")
     p.add_argument("--output-dir", type=Path, default=Path("output"))
     a = p.parse_args(argv)
 
@@ -30,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
         path = download_event_strain(a.event_id, a.detector, a.data_dir)
         s = load_hdf5_strain(path)
         gps = event_gps(a.event_id)
+        s = crop_strain(s, gps, a.span)  # same result whether the file is 32 s, 60 s or 4096 s
         m = analyze_signal(s.times, s.strain, event_gps=gps)
         png = plot_full_analysis(s.times, s.strain, m, a.event_id, a.output_dir)
     except Exception as e:  # noqa: BLE001 - report cleanly, non-zero exit

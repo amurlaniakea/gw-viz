@@ -19,8 +19,9 @@ def whiten_bandpass(
 ) -> np.ndarray:
     """Whiten with a Welch PSD estimated from the data itself, then band-pass."""
     n = len(strain)
-    x = (strain - np.mean(strain)) * tukey(n, alpha=0.1)
-    freqs, psd = welch(x, fs=fs, nperseg=min(int(seglen_s * fs), n))
+    # fixed 1 s taper at each end (independent of file length)
+    x = (strain - np.mean(strain)) * tukey(n, alpha=min(1.0, 2.0 * fs / n))
+    freqs, psd = welch(x, fs=fs, nperseg=min(int(seglen_s * fs), n), average="median")  # robust to the signal itself
     f = np.fft.rfftfreq(n, d=1.0 / fs)
     asd = np.sqrt(np.interp(f, freqs, psd))
     w = np.fft.irfft(np.fft.rfft(x) / asd, n=n)
@@ -52,7 +53,7 @@ def analyze_signal(
         raise ValueError("Event time falls outside the data span.")
 
     # Off-source windows, skipping 1 s at both file edges (filter transients) and around the event.
-    edge = int(fs)
+    edge = int(2 * fs)  # skip the 1 s tapers plus filter transients
     starts = np.arange(edge, len(w) - n_win - edge, n_win)
     off_e = []
     for s in starts:

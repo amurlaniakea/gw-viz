@@ -30,6 +30,16 @@ class Strain:
     sample_rate: float
 
 
+def crop_strain(s: Strain, center_gps: float, span_s: float) -> Strain:
+    """Keep `span_s` seconds centred on `center_gps` (whole series if span_s <= 0)."""
+    if span_s <= 0:
+        return s
+    keep = np.abs(s.times - center_gps) <= span_s / 2
+    if keep.sum() < 2:
+        raise ValueError("Event time falls outside the data span.")
+    return Strain(times=s.times[keep], strain=s.strain[keep], sample_rate=s.sample_rate)
+
+
 def data_dir() -> Path:
     return Path(os.getenv("GW_DATA_DIR", "./data/raw"))
 

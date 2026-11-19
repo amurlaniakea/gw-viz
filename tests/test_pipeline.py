@@ -85,3 +85,29 @@ def test_loader_rejects_unknown_layout(tmp_path):
         f.create_dataset("x", data=np.zeros(10))
     with pytest.raises(ValueError):
         load_hdf5_strain(p)
+
+
+def test_crop_keeps_requested_span(gwosc_file):
+    from gw_analysis.io.downloader import crop_strain
+
+    s = load_hdf5_strain(gwosc_file)
+    c = crop_strain(s, EVENT, 24)
+    assert c.times[0] >= EVENT - 12 and c.times[-1] <= EVENT + 12
+    a = analyze_signal(c.times, c.strain, event_gps=EVENT)
+    assert a["excess_power_sigma"] > 8
+    with pytest.raises(ValueError):
+        crop_strain(s, GPS0 + 5000, 24)
+    assert crop_strain(s, EVENT, 0) is s
+
+
+def test_significance_is_stable_across_analysed_span(signal):
+    """Median-averaged PSD keeps the injected signal from biasing its own whitening."""
+    from gw_analysis.io.downloader import Strain, crop_strain
+
+    t = GPS0 + np.arange(len(signal)) / FS
+    s = Strain(t, signal, FS)
+    vals = [
+        analyze_signal(c.times, c.strain, event_gps=EVENT)["excess_power_sigma"]
+        for c in (crop_strain(s, EVENT, span) for span in (0, 24))
+    ]
+    assert max(vals) / min(vals) < 1.25
