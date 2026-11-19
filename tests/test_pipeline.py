@@ -1,0 +1,87 @@
+import numpy as np
+import pytest
+
+from gw_analysis.io import downloader
+from gw_analysis.io.downloader import load_hdf5_strain
+from gw_analysis.processing.snr_calculator import analyze_signal
+from tests.conftest import EVENT, FS, GPS0
+
+
+def test_loader_reads_gps_and_rate(gwosc_file):
+    s = load_hdf5_strain(gwosc_file)
+    assert s.sample_rate == pytest.approx(FS)
+    assert s.times[0] == pytest.approx(GPS0)
+    assert s.times[-1] - s.times[0] == pytest.approx(32 - 1 / FS)
+
+
+def test_injected_signal_is_significant_and_noise_is_not(gwosc_file, noise):
+    s = load_hdf5_strain(gwosc_file)
+    on = analyze_signal(s.times, s.strain, event_gps=EVENT)
+    off = analyze_signal(s.times, noise, event_gps=EVENT)
+    assert on["excess_power_sigma"] > 8
+    assert abs(off["excess_power_sigma"]) < 4
+    assert 30 < on["central_freq_hz"] < 350
+    assert on["peak_amp_bandpassed"] < np.max(np.abs(s.strain)) * 10
+
+
+def test_event_outside_data_raises(gwosc_file):
+    s = load_hdf5_strain(gwosc_file)
+    with pytest.raises(ValueError):
+        analyze_signal(s.times, s.strain, event_gps=GPS0 + 1000)
+
+
+def test_download_is_atomic_and_cached(tmp_path, monkeypatch):
+    monkeypatch.setattr(downloader, "get_event_urls", lambda *a, **k: ["http://x/a-4096.hdf5", "http://x/a-32.hdf5"])
+    calls = []
+
+    class R:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def raise_for_status(self): pass
+        def iter_content(self, n): yield b"abc"
+
+    monkeypatch.setattr(downloader.requests, "get", lambda url, **k: calls.append(url) or R())
+    p = downloader.download_event_strain("GW150914", "H1", tmp_path)
+    assert p.read_bytes() == b"abc" and calls == ["http://x/a-32.hdf5"]
+    assert not list(tmp_path.glob("*.part"))
+    downloader.download_event_strain("GW150914", "H1", tmp_path)
+    assert len(calls) == 1  # cache hit
+
+
+def test_failed_download_leaves_no_cache(tmp_path, monkeypatch):
+    monkeypatch.setattr(downloader, "get_event_urls", lambda *a, **k: ["http://x/a.hdf5"])
+
+    def boom(*a, **k):
+        raise OSError("net down")
+
+    monkeypatch.setattr(downloader.requests, "get", boom)
+    with pytest.raises(OSError):
+        downloader.download_event_strain("GW150914", "H1", tmp_path)
+    assert not list(tmp_path.iterdir())
+
+
+def test_bad_detector():
+    with pytest.raises(ValueError):
+        downloader.download_event_strain("GW150914", "X1")
+
+
+def test_loader_reads_gwpy_written_file(tmp_path, signal):
+    import h5py
+
+    p = tmp_path / "gwpy.hdf5"
+    with h5py.File(p, "w") as f:
+        ds = f.create_dataset("H1:GWOSC-4KHZ_R1_STRAIN", data=signal)
+        ds.attrs["dx"] = 1 / FS
+        ds.attrs["x0"] = GPS0
+    s = load_hdf5_strain(p)
+    assert s.sample_rate == pytest.approx(FS) and s.times[0] == pytest.approx(GPS0)
+
+
+def test_loader_rejects_unknown_layout(tmp_path):
+    import h5py
+
+    p = tmp_path / "bad.hdf5"
+    with h5py.File(p, "w") as f:
+        f.create_dataset("x", data=np.zeros(10))
+    with pytest.raises(ValueError):
+        load_hdf5_strain(p)
