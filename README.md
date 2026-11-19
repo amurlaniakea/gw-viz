@@ -28,7 +28,8 @@ pip install -e ".[dev]"
 gw-analyze GW150914 --detector H1                      # análisis básico + figura
 gw-analyze GW150914 --detector H1 --matched-filter     # + matched filter educativo
 gw-analyze GW150914 --span 32 --json --no-plot         # salida máquina-legible
-gw-analyze --list-events                               # catálogo GWOSC (requiere red)
+gw-analyze --list-events                               # catálogo GWOSC, eventos GW… (requiere red)
+gw-analyze --list-events --all-events                  # incluye candidatos marginales (nombres sin «GW»)
 ```
 
 Salida real con GW150914 (H1, `--span 64`):
@@ -86,6 +87,7 @@ pytest -q && ruff check .
 ## Limitaciones
 
 - Plantillas solo de inspiral (sin fusión ni ringdown): masas recuperadas **indicativas**, no estimación de parámetros.
+- El banco cubre masas chirp de 15 a 45 M☉; sistemas más masivos saturan el borde del banco y el SNR queda aún más infravalorado.
 - Un solo detector por ejecución; sin coincidencia H1/L1, sin tratamiento de glitches ni filtros notch.
 - Validado con datos sintéticos y con GW150914 (H1). Otros eventos, en especial sistemas de estrellas de neutrones
   de larga duración como GW170817, requieren otra banda y otro banco de plantillas.

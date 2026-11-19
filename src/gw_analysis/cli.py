@@ -37,6 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-plot", action="store_true", help="Skip figures")
     p.add_argument("--json", action="store_true", help="Print results as JSON only")
     p.add_argument("--list-events", action="store_true", help="List GWOSC events and exit")
+    p.add_argument("--all-events", action="store_true",
+                   help="With --list-events, include marginal candidates (names without 'GW')")
     p.add_argument("--version", action="version", version=f"gw-analysis {__version__}")
     return p
 
@@ -47,7 +49,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if a.list_events:
         try:
-            names = list_events()
+            names = list_events(include_marginal=a.all_events)
         except Exception as e:  # noqa: BLE001 - network/catalogue errors
             print(f"Warning: GWOSC catalogue unavailable ({e}); showing only the events "
                   "built into this tool.", file=sys.stderr)

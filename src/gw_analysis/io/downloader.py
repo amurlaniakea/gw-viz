@@ -57,10 +57,17 @@ def _retrying_session() -> requests.Session:
     return session
 
 
-def list_events() -> list[str]:
-    """Event names in the GWOSC catalogue (needs network); version suffixes are dropped."""
+def list_events(include_marginal: bool = False) -> list[str]:
+    """Event names in the GWOSC catalogue (needs network); version suffixes are dropped.
+
+    By default only names starting with ``GW`` are returned; the catalogue also holds marginal
+    candidates named by date only (e.g. ``151008``), which are not the usual teaching examples.
+    """
     names = datasets.find_datasets(type="event", session=_retrying_session())
-    return sorted({re.sub(r"-v\d+$", "", n) for n in names})
+    clean = {re.sub(r"-v\d+$", "", n) for n in names}
+    if not include_marginal:
+        clean = {n for n in clean if re.match(r"GW\d{6}", n)}
+    return sorted(clean)
 
 
 def event_gps(event_id: str) -> float:

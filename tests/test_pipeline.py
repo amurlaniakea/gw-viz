@@ -118,6 +118,14 @@ def test_list_events_strips_versions(monkeypatch):
     assert downloader.list_events() == ["GW150914", "GW170817"]
 
 
+def test_list_events_hides_marginal_candidates_by_default(monkeypatch):
+    monkeypatch.setattr(downloader.datasets, "find_datasets",
+                        lambda **k: ["151008-v1", "151012.2-v1", "GW150914-v3", "GW190521_074359-v1"])
+    assert downloader.list_events() == ["GW150914", "GW190521_074359"]
+    assert downloader.list_events(include_marginal=True) == [
+        "151008", "151012.2", "GW150914", "GW190521_074359"]
+
+
 def test_cli_json_and_errors(tmp_path, gwosc_file, monkeypatch, capsys):
     import json
 
