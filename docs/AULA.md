@@ -29,6 +29,9 @@ Ejecuta con `--matched-filter` y abre `output/GW150914_snr.png`.
 *Referencia para el profesor* (GW150914, `--span 64`, versión 0.3.x): H1 ≈ 10.8 con fondo máximo ≈ 4.9; L1 ≈ 6.5 con fondo máximo ≈ 5.1. En L1 la señal queda cerca del fondo: buen punto de partida para discutir significancia y por qué se combinan los detectores.
 *Objetivo*: idea de filtro óptimo, fondo empírico y significancia estadística.
 
+## Complemento — demo web
+La [demo interactiva](https://amurlaniakea.github.io/gw-viz/) permite explorar sin instalar nada: baja el SNR inyectado hasta que el pico se confunda con el fondo, cambia la masa chirp y compara con la mejor plantilla, prueba solo ruido. Recuerda a los alumnos que son **datos sintéticos** y que en datos reales no se conoce la señal.
+
 ## Discusión final
 1. ¿Qué diferencia hay entre «ver» una señal y «detectarla»?
 2. ¿Por qué se exige coincidencia entre detectores en el análisis real?

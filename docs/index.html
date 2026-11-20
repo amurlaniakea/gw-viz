@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GW Analysis Toolkit — resultados y demo</title>
+<meta name="description" content="Resultados reales con GW150914 (GWOSC) y una demo interactiva con datos sintéticos de un filtro adaptado para ondas gravitacionales.">
+<style>
+  :root { --bg:#f7f8fa; --panel:#ffffff; --fg:#1b1f24; --muted:#586069; --grid:#c9ced6; --accent:#0b7285; --warn:#c92a2a; --border:#d8dce2; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1318; --panel:#171c23; --fg:#e6e9ee; --muted:#9aa4b2; --grid:#39414d; --accent:#4cc9e0; --warn:#ff8787; --border:#2a313b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: .2em 0 .1em; }
+  h2 { font-size: 1.3rem; margin: 2em 0 .5em; padding-top: .6em; border-top: 1px solid var(--border); }
+  p, li { max-width: 72ch; }
+  .lead { color: var(--muted); }
+  .notice { background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .notice.warn { border-left-color: var(--warn); }
+  table { border-collapse: collapse; width: 100%; background: var(--panel); border: 1px solid var(--border); font-size: .95rem; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+  figure { margin: 1em 0; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+  figure img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  figcaption { color: var(--muted); font-size: .9rem; padding-top: 6px; }
+  .missing { color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
+  .controls label { display: block; font-size: .9rem; color: var(--muted); }
+  .controls output { color: var(--fg); font-weight: 600; }
+  .controls input[type=range] { width: 100%; }
+  .controls input[type=number] { width: 7em; }
+  button { font: inherit; padding: 4px 12px; border: 1px solid var(--border); background: var(--panel); color: var(--fg); border-radius: 6px; cursor: pointer; }
+  canvas { width: 100%; display: block; margin: 10px 0; border: 1px solid var(--border); border-radius: 6px; }
+  pre { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; overflow-x: auto; font-size: .88rem; }
+  #stats { white-space: pre-wrap; margin: 0; }
+  #status { color: var(--muted); font-size: .9rem; min-height: 1.4em; }
+  a { color: var(--accent); }
+  footer { margin-top: 3em; color: var(--muted); font-size: .88rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GW Analysis Toolkit</h1>
+  <p class="lead">Análisis reproducible de datos abiertos de ondas gravitacionales (LIGO/Virgo/KAGRA) para consulta y para clase.
+     <a href="https://github.com/amurlaniakea/gw-viz">Código en GitHub</a>.</p>
+
+  <div class="notice">
+    <strong>Qué es esta página.</strong> La herramienta es un paquete de Python y <em>no se ejecuta en el navegador</em>.
+    Aquí tienes (1) <strong>instantáneas de resultados reales</strong> producidos por el paquete con datos de GWOSC y
+    (2) una <strong>demo interactiva con datos sintéticos</strong> para ver cómo funciona un filtro adaptado.
+    Las dos partes están claramente separadas.
+  </div>
+
+  <h2>1. Resultados reales: GW150914</h2>
+  <p>Datos de GWOSC (4096 Hz), 64 s centrados en el evento, ejecutados con
+     <code>gw-analyze GW150914 --detector H1|L1 --matched-filter</code> (versión 0.3.x).</p>
+  <table>
+    <thead><tr><th>Detector</th><th>Significancia de exceso de potencia</th><th>Pico blanqueado</th><th>SNR filtro adaptado</th><th>Mayor SNR en el fondo</th></tr></thead>
+    <tbody>
+      <tr><td>H1</td><td>18.1 σ</td><td>8.1 σ</td><td>10.8</td><td>4.9</td></tr>
+      <tr><td>L1</td><td>7.5 σ</td><td>6.9 σ</td><td>6.5</td><td>5.1</td></tr>
+    </tbody>
+  </table>
+  <p class="lead">El SNR del filtro adaptado usa plantillas solo de inspiral (cortadas en el ISCO), así que es una <strong>cota inferior</strong>:
+     la suma en cuadratura (≈12.6) es aproximadamente la mitad del SNR de red publicado (~24). En L1 la separación respecto al fondo es modesta.
+     No es una estimación de parámetros.</p>
+  <div class="grid2">
+    <figure><img data-real-figure src="img/H1/GW150914_report.png" alt="Informe de GW150914 en H1: señal filtrada, zoom blanqueado y densidad espectral">
+      <figcaption>H1: informe de tres paneles (señal filtrada, zoom blanqueado, ASD).</figcaption></figure>
+    <figure><img data-real-figure src="img/H1/GW150914_snr.png" alt="SNR del filtro adaptado en H1 frente al fondo">
+      <figcaption>H1: SNR del filtro adaptado frente al fondo sin señal.</figcaption></figure>
+    <figure><img data-real-figure src="img/L1/GW150914_report.png" alt="Informe de GW150914 en L1">
+      <figcaption>L1: informe de tres paneles.</figcaption></figure>
+    <figure><img data-real-figure src="img/L1/GW150914_snr.png" alt="SNR del filtro adaptado en L1 frente al fondo">
+      <figcaption>L1: SNR del filtro adaptado frente al fondo.</figcaption></figure>
+  </div>
+
+  <h2>2. Demo interactiva (datos sintéticos)</h2>
+  <div class="notice warn">
+    <strong>Datos sintéticos.</strong> Ruido gaussiano coloreado generado en tu navegador más una señal de inspiral que <em>tú</em> inyectas.
+    En datos reales no conoces la señal de antemano: aquí puedes ver qué recupera el filtro cuando sí la conoces.
+    Reproduce la misma matemática que <code>matched_filter.py</code> (plantillas TaylorF2 2PN, PSD de Welch con mediana, fondo en ventanas sin señal).
+  </div>
+  <div class="controls" style="margin-top:12px">
+    <div><label for="mc">Masa chirp inyectada (M☉): <output id="mcVal">30.0</output></label>
+      <input id="mc" type="range" min="15" max="45" step="0.5" value="30"></div>
+    <div><label for="eta">Razón de masas simétrica η: <output id="etaVal">0.23</output></label>
+      <input id="eta" type="range" min="0.18" max="0.25" step="0.01" value="0.23"></div>
+    <div><label for="snr">SNR óptimo inyectado: <output id="snrVal">20</output></label>
+      <input id="snr" type="range" min="0" max="40" step="1" value="20"></div>
+    <div><label for="seed">Semilla del ruido</label>
+      <input id="seed" type="number" min="1" max="999999" value="11"> <button id="btnNew" type="button">Nuevo ruido</button></div>
+    <div><label><input id="showSignal" type="checkbox"> Mostrar la señal inyectada (en datos reales no se conoce)</label></div>
+  </div>
+  <p id="status" role="status" aria-live="polite">Cargando…</p>
+  <canvas id="c1" height="190" aria-label="Datos con ruido y señal inyectada"></canvas>
+  <canvas id="c2" height="190" aria-label="Datos blanqueados"></canvas>
+  <canvas id="c3" height="220" aria-label="SNR del filtro adaptado en el tiempo"></canvas>
+  <pre id="stats">Calculando…</pre>
+  <p class="lead">Prueba a poner el SNR en 0 (solo ruido): el filtro devuelve un máximo de ruido, comparable al del fondo, y la cota de falsa alarma no baja.
+     Con SNR inyectado ≈ 5–8 el pico ya se acerca al fondo; por encima de ~10 se separa con claridad. Cambia la masa chirp y fíjate en la masa recuperada.</p>
+
+  <h2>3. Reprodúcelo tú</h2>
+<pre>python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+git clone https://github.com/amurlaniakea/gw-viz.git &amp;&amp; cd gw-viz
+pip install -e ".[dev]"
+gw-analyze GW150914 --detector H1 --matched-filter</pre>
+  <p>Para regenerar las figuras de esta página:</p>
+<pre>gw-analyze GW150914 --detector H1 --matched-filter --output-dir docs/img/H1
+gw-analyze GW150914 --detector L1 --matched-filter --output-dir docs/img/L1</pre>
+  <p>Metodología y limitaciones: <a href="https://github.com/amurlaniakea/gw-viz/blob/main/docs/METODOLOGIA.md">METODOLOGIA.md</a>.
+     Prácticas para clase: <a href="https://github.com/amurlaniakea/gw-viz/blob/main/docs/AULA.md">AULA.md</a>.</p>
+
+  <footer>
+    <p>Datos: <em>This research has made use of data obtained from the Gravitational Wave Open Science Center (<a href="https://gwosc.org">gwosc.org</a>)</em>.
+       Herramienta didáctica: para resultados científicos usa PyCBC, GWpy o LALSuite.</p>
+    <p>AGPL-3.0-or-later. © Pedro Sordo Martínez.</p>
+  </footer>
+</main>
+<script src="demo.js"></script>
+</body>
+</html>

@@ -14,6 +14,9 @@ whitens and band-passes it, measures excess-power significance against off-sourc
 educational matched filter (2PN TaylorF2 inspiral bank) validated by injection/recovery. Not a replacement for
 LALSuite/PyCBC; see *Limitaciones*.
 
+**Demo y resultados en la web:** <https://amurlaniakea.github.io/gw-viz/> — instantáneas reales de GW150914 (H1/L1) y una demo interactiva
+con **datos sintéticos** que muestra cómo un filtro adaptado recupera una señal inyectada. La herramienta en sí se ejecuta en Python, no en el navegador.
+
 ## Instalación
 
 ```bash
@@ -78,10 +81,11 @@ filtro adaptado y probabilidad de falsa alarma) y preguntas de discusión. El no
 - `src/gw_analysis/io/`: descarga con caché atómica y lectura de HDF5 (GPS y frecuencia de muestreo se leen del archivo).
 - `src/gw_analysis/processing/`: blanqueado y métricas (`snr_calculator.py`), filtro adaptado (`matched_filter.py`).
 - `src/gw_analysis/viz/`: figuras. `src/gw_analysis/cli.py`: comando `gw-analyze`.
-- `tests/`: 21 pruebas herméticas con datos sintéticos (la red está bloqueada en los tests), incluida inyección y recuperación de señales.
+- `docs/index.html` + `docs/demo.js`: página estática (GitHub Pages) con resultados reales y la demo interactiva; sin dependencias externas.
+- `tests/`: 22 pruebas Python herméticas (la red está bloqueada) y 8 pruebas JS de la demo (paridad numérica con Python, inyección y recuperación).
 
 ```bash
-pytest -q && ruff check .
+pytest -q && ruff check . && node tests/demo.test.js
 ```
 
 ## Limitaciones
